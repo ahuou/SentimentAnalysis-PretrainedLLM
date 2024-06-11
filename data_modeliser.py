@@ -12,6 +12,8 @@ from llama_cpp import Llama
 import pickle
 import os
 import random
+import argparse
+import json
 def get_mult_instructions(file):
    contexts = []
    prompts = []
@@ -250,12 +252,37 @@ posTweets, neutralTweets, negTweets = prompter(text_df2, randomize_few_shot=True
 
 #run_model('prompts.txt', text, 3, PATH_MODEL, PARAMS_MODEL, PARAMS_GENERATION)
 
-run_model('prompts/DS2_3_Shot_prompt.txt', text_df2, PATH_MODEL_MISTRAL7B, PARAMS_MODEL, PARAMS_GENERATION, 0, marker='DS2', start=14270, random_few_shot=True, classified=False)
+#run_model('prompts/DS2_3_Shot_prompt.txt', text_df2, PATH_MODEL_MISTRAL7B, PARAMS_MODEL, PARAMS_GENERATION, 0, marker='DS2', start=14270, random_few_shot=True, classified=False)
 #run_model('newPromptsTwitter.txt', text_df2, PATH_MODEL_MISTRAL7B, PARAMS_MODEL, PARAMS_GENERATION, 0,  marker='DS2')
 
 
+# Setup for argparse
+
+def setup_arg_parser():
+   parser = argparse.ArgumentParser(description="Run sentiment analysis model with command line arguments.")
+   parser.add_argument('--prompts_file', type=str, required=True, help='Path to the prompts file')
+   parser.add_argument('--model_path', type=str, required=True, help='Path to the model file')
+   parser.add_argument('--batch_size', type=int, default=0, help='Batch size for processing data')
+   parser.add_argument('--marker', type=str, required=True, help='Marker for the dataset type')
+   parser.add_argument('--start', type=int, default=0, help='Starting index for processing')
+   parser.add_argument('--random_few_shot', action='store_true', help='Flag to use random few-shot learning')
+   parser.add_argument('--classified', action='store_true', help='Flag to use classified mode')
+   return parser
 
 
+def main():
+   parser = setup_arg_parser()
+   args = parser.parse_args()
+
+   text_df = data1 if args.marker == 'DS1' else data2
+
+   # Assuming run_model is defined correctly elsewhere
+   run_model(args.prompts_file, text_df, args.model_path, PARAMS_MODEL, PARAMS_GENERATION, args.batch_size,
+           args.marker, start=args.start, random_few_shot=args.random_few_shot, classified=args.classified)
+
+
+if __name__ == '__main__':
+      main()
 
 
 
