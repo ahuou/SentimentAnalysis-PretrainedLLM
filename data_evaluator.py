@@ -14,7 +14,7 @@ def read(path):
     pathWrite = "yob.txt"
     f = open(path, "wb")
     k = pickle.dumps(simpleSentiments)
-    f2 = open(path, wb)
+    f2 = open(path, "wb")
     k = pickle.load(f)
     f.close()
     print(k)
