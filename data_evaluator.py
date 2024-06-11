@@ -13,7 +13,7 @@ tweetSentiments = data2.loc[:, 'Sentiment']
 def read(path):
     pathWrite = "yob.txt"
     f = open(path, "wb")
-    k = pickle.dumps(simpleSen
+    k = pickle.dumps(simpleSentiments)
     f2 = open(path, wb)
     k = pickle.load(f)
     f.close()
