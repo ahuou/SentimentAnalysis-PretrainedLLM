@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 import sqlite3
 
 def feelings_to_emotions(emotion_list, neg_list, pos_list):
@@ -7,6 +8,15 @@ def feelings_to_emotions(emotion_list, neg_list, pos_list):
             emotion_list[i] = 'Negative'
         elif emotion_list[i] in pos_list:
             emotion_list[i] = 'Positive'
+
+
+def safe_to_csv(df, filename):
+    if not os.path.exists(filename):
+        df.to_csv(filename, index=False, sep='\t')
+    else:
+        print(f"File {filename} already exists. Not overwriting.")
+
+# Example usage
 
 
 text = []
@@ -49,10 +59,14 @@ feelings_to_emotions(new_emotion2, ['disgust', 'sadness', 'fear', 'anger', 'sham
 data2 = pd.concat((pd.Series(text2),pd.Series(new_emotion2)), axis=1, ignore_index=True)
 data2.columns = ['Text', 'Sentiment']
 
-raw_data1.to_csv('simple_emotions.txt', index=False, sep='\t')
-data1.to_csv('simple_sentiments.txt', index=False, sep='\t')
-raw_data2.to_csv('clean_tweet_emotions.txt', index=False, sep='\t')
-data2.to_csv('clean_tweet_sentiments.txt', index=False , sep='\t')
+safe_to_csv(raw_data1, 'simple_emotions.txt')
+#raw_data1.to_csv('simple_emotions.txt', index=False, sep='\t')
+safe_to_csv(data1, 'simple_sentiments.txt')
+#data1.to_csv('simple_sentiments.txt', index=False, sep='\t')
+safe_to_csv(raw_data2, 'clean_tweet_emotions.txt')
+#raw_data2.to_csv('clean_tweet_emotions.txt', index=False, sep='\t')
+safe_to_csv(data2, 'clean_tweet_sentiments.txt')
+#data2.to_csv('clean_tweet_sentiments.txt', index=False , sep='\t')
 
 print(data1.head())
 print(data1.columns)
