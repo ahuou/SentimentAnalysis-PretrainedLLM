@@ -136,7 +136,7 @@ def conf_Matrix(confMatrix, predClasses, trueClasses, normalized):
 
 
 
-def evaluator(path, type, normalized=False, mode="discrete", lowBound=0.5, highBound=0.5, majMap="Negative"):
+def evaluator(res_to_eval=path, type=type, normalized=False, mode="discrete", lowBound=0.5, highBound=0.5, majMap="Negative"):
 
     pred, true = cleaner(path, type, mode=mode, lowBound=lowBound, highBound=highBound, majMap=majMap)
     print("pred : ", len(pred), "\ntrue : ", len(true))

@@ -23,7 +23,7 @@ text = []
 labs = []
 emotion = []
 label_map = ["joy", 'fear', "anger", "sadness", "disgust", "shame", "guilt"]   # information provided with the dataset
-with open('dataset_textEmotion/text.txt', 'r') as f:
+with open('C:\\Users\\alexh\\PycharmProjects\\proj_bach\\dataset_textEmotion\\text.txt', 'r') as f:
      for line in f:
         line = line.strip()
         label = line[1:line.find(']')].strip().split()
@@ -44,7 +44,7 @@ data1.columns = ['Text','Sentiment']
 
 
 
-raw_data2 = pd.read_csv('dataset_emoDetectInText/EmotionDetectInText/data/emotion_dataset.csv')
+raw_data2 = pd.read_csv('C:\\Users\\alexh\\PycharmProjects\\proj_bach\\dataset_emoDetectInText\\EmotionDetectInText\\data\\emotion_dataset.csv')
 raw_data2 = raw_data2[['Clean_Text', 'Emotion']]
 raw_data2.columns = ['Text', 'Emotion']
 mask = raw_data2['Emotion'] == 'surprise'
