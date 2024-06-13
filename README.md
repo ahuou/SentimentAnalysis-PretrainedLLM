@@ -85,6 +85,9 @@ In order to evaluate the model, one should run the data_evaluator script, one ca
 
 - [`--majMap`](--majMap): In the case the model predicts an answer that can't be approximated to one of the sentiments, transforms its output to the selected sentiment majMap
 
+- [`--testPercent`](--testPercent): Allows us to measure performance on the same subset of the DS as the baselines
+
+
 ## Comparing the model to the baselines
 
 In order to know how good our evaluation of the model's performance with respect to our prompt is we compare it to different types of baselines.

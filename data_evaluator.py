@@ -79,6 +79,7 @@ def cleaner(path, type, mode="discrete", lowBound=0.5, highBound=0.5, majMap="Po
     for i in range(len(arr)):
         arr[i] = (arr[i][0:9]).strip()
         arr[i], missed = classify_sentiment(arr[i], classes, majMap)
+        #missed = 1
 
         if mode == "continuous":
             score = 0.5
@@ -103,6 +104,8 @@ def cleaner(path, type, mode="discrete", lowBound=0.5, highBound=0.5, majMap="Po
 
         for classi in classes:
             if not missed and (arr[i] in classi) :
+            #if (arr[i] in classi) :
+
                 arr[i] = classi
                 missed = False
                 break
@@ -136,9 +139,10 @@ def conf_Matrix(confMatrix, predClasses, trueClasses, normalized):
 
 
 
-def evaluator(res_to_eval=path, type=type, normalized=False, mode="discrete", lowBound=0.5, highBound=0.5, majMap="Negative"):
+def evaluator(res_to_eval=None, type=type, normalized=False, mode="discrete", lowBound=0.5, highBound=0.5, majMap="Negative", testPercent=0.9):
 
-    pred, true = cleaner(path, type, mode=mode, lowBound=lowBound, highBound=highBound, majMap=majMap)
+    pred, true = cleaner(res_to_eval, type, mode=mode, lowBound=lowBound, highBound=highBound, majMap=majMap)
+    _, pred, _, true = sklearn.model_selection.train_test_split(pred, true, test_size=testPercent, train_size=1 - testPercent, random_state=42)
     print("pred : ", len(pred), "\ntrue : ", len(true))
 
     if type == "simple":
@@ -170,4 +174,4 @@ def evaluator(res_to_eval=path, type=type, normalized=False, mode="discrete", lo
     else:
         return "Error, type not valid"
 
-evaluator("results/DS1_0_Shot_res.txt", "simple", normalized=True, mode="discrete", lowBound=0.5, highBound=0.5, majMap='Negative')
+evaluator("Ds2Mistral.txt", "tweet", normalized=True, mode="discrete", lowBound=0.5, highBound=0.5, majMap='Positive', testPercent=0.9)
