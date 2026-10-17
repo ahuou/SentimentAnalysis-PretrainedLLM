@@ -2,6 +2,8 @@ import pandas as pd
 import os
 import sqlite3
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+
 def feelings_to_emotions(emotion_list, neg_list, pos_list):
     for i in range(len(emotion_list)):
         if emotion_list[i] in neg_list:
@@ -23,7 +25,7 @@ text = []
 labs = []
 emotion = []
 label_map = ["joy", 'fear', "anger", "sadness", "disgust", "shame", "guilt"]   # information provided with the dataset
-with open('C:\\Users\\alexh\\PycharmProjects\\proj_bach\\dataset_textEmotion\\text.txt', 'r') as f:
+with open(os.path.join(HERE, 'dataset_textEmotion', 'text.txt'), 'r', encoding='utf-8') as f:
      for line in f:
         line = line.strip()
         label = line[1:line.find(']')].strip().split()
@@ -44,7 +46,7 @@ data1.columns = ['Text','Sentiment']
 
 
 
-raw_data2 = pd.read_csv('C:\\Users\\alexh\\PycharmProjects\\proj_bach\\dataset_emoDetectInText\\EmotionDetectInText\\data\\emotion_dataset.csv')
+raw_data2 = pd.read_csv(os.path.join(HERE, 'dataset_emoDetectInText', 'EmotionDetectInText', 'data', 'emotion_dataset.csv'))
 raw_data2 = raw_data2[['Clean_Text', 'Emotion']]
 raw_data2.columns = ['Text', 'Emotion']
 mask = raw_data2['Emotion'] == 'surprise'

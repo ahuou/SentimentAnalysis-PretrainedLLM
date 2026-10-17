@@ -1,0 +1,12 @@
+# Datasets are downloaded separately (see README)
+dataset_textEmotion/
+dataset_emoDetectInText/
+# Local model weights and generated files
+*.gguf
+simple_emotions.txt
+simple_sentiments.txt
+clean_tweet_emotions.txt
+clean_tweet_sentiments.txt
+.ipynb_checkpoints/
+__pycache__/
+.env

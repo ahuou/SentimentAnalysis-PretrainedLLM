@@ -174,4 +174,5 @@ def evaluator(res_to_eval=None, type=type, normalized=False, mode="discrete", lo
     else:
         return "Error, type not valid"
 
-evaluator("Ds2Mistral.txt", "tweet", normalized=True, mode="discrete", lowBound=0.5, highBound=0.5, majMap='Positive', testPercent=0.9)
+if __name__ == "__main__":
+    evaluator("results/DS2_3_Shot_res.txt", "tweet", normalized=True, mode="discrete", lowBound=0.5, highBound=0.5, majMap='Positive', testPercent=0.9)

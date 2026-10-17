@@ -1,94 +1,66 @@
-# Emotional Text Analysis Repository
+# Sentiment analysis with a pretrained, non-fine-tuned LLM
 
-This repository contains a collection of tools for analyzing and modeling emotional content in text data. It includes several Python scripts, datasets, and resources designed for sentiment analysis.
+Can a general-purpose local LLM (Mistral 7B Instruct, prompted only, never fine-tuned) classify the sentiment of short texts as well as purpose-built models? Bachelor semester project at the [Idiap Research Institute](https://www.idiap.ch) (EPFL, spring 2024), published as Idiap research report [Idiap-RR-05-2024](https://publications.idiap.ch/attachments/reports/2024/Huou_Idiap-RR-05-2024.pdf).
 
-## Repository Structure
+## Results
 
-### Python Scripts
-- **data_evaluator.py**: Evaluates model performance using various metrics and provides classification reports.
-- **data_modeliser.py**: Sets up and runs machine learning models for text-based emotion detection.
-- **data_player.py**: Processes text data for visualization and statistical analysis.
-- **data_retriever.py**: Manages the retrieval of text data from databases or file systems.
-- **data_tester.py**: Tests the functions for accuracy and efficiency in data processing.
-- **merger.py**: Merges multiple datasets or outputs into a single format.
+Prompted Mistral 7B lands between a classical ML baseline and a RoBERTa model fine-tuned for emotion detection. 3-shot prompting with randomly drawn examples beats zero-shot on both datasets.
 
-### Directories
-- **baselines/**: Stores baseline models for comparison.
-- **dataset_emoDetectInText/**: Contains datasets formatted for emotion detection.
-- **dataset_textEmotion/**: Stores datasets annotated for text-based emotion analysis.
-- **prompts/**: Includes prompts for data collection or testing.
-- **results/**: Holds output from scripts and models like analysis results and metrics.
+![Results on the 90% test split](docs/results.png)
 
-## Key Functionalities
+| Model (90% test split) | DS1 Messages F1-macro | DS1 accuracy | DS2 Tweets F1-macro | DS2 accuracy |
+|---|---|---|---|---|
+| Baseline: Decision Tree | 0.56 | 0.87 | 0.62 | 0.72 |
+| Mistral 7B, zero-shot | 0.74 | 0.85 | 0.59 | 0.64 |
+| Mistral 7B, 3-shot | 0.78 | 0.90 | 0.66 | 0.70 |
+| Baseline: RoBERTa (fine-tuned for emotion) | 0.80 | 0.91 | 0.75 | 0.78 |
 
-- **Emotion Analysis**: Advanced NLP techniques to detect emotions in text.
-- **Data Cleaning and Preprocessing**: Automated tools for preparing text data for analysis.
-- **Performance Evaluation**: Utilities to measure the effectiveness of sentiment analysis models.
-- **Data Integration**: Scripts to consolidate datasets from various sources.
+Source: Table 1 of the report. The report also shows that the Decision Tree degrades sharply when trained on one dataset and tested on the other, while the prompted LLM needs no training data at all.
 
-## Setup and Requirements
+## How it works
 
-This repository uses llama_cpp_python repository and benefits from GPU acceleration, but to do so one needs to 
-setup the python wheels and cuda drivers. Here is a useful issue that helped me fix that problem with my Windows install:
-- https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html (overall )
-- https://github.com/abetlen/llama-cpp-python/issues/721 (fixing GPU not being used)
+1. `data_retriever.py` loads both emotion datasets and maps emotions to sentiment (joy to Positive; disgust, sadness, fear, anger, shame, guilt to Negative; neutral to Neutral; surprise dropped).
+2. `data_player.py` prints dataset statistics after NLTK stopword removal.
+3. `data_modeliser.py` runs Mistral 7B Instruct (GGUF, via `llama-cpp-python`, full GPU offload) over every text with a prompt from `prompts/`, optionally adding 3 random labelled examples (`--random_few_shot`). Predictions are pickled into `results/`.
+4. `data_evaluator.py` cleans the free-form LLM output (NLTK normalisation, edit distance, fuzzy match, fallback label `majMap`) and produces confusion matrices and classification reports on the same 90% split as the baselines.
+5. `baselines/` holds the notebooks for the classical ML classifiers (Logistic Regression, SVM, Decision Tree, Random Forest) and the RoBERTa baseline; `baselines/preRunRoberta/` keeps the executed runs used in the report.
 
-In order to use the repository, one should first run the data_retriever script which will create 2 dataframes
-corresponding to cleaned, tokenized versions of each dataset
+## Run it
 
-Then, the script data_player allows to get basic statistics about both datasets, and the tester script
-helps debugging the data_retriever module.
+Untested end to end in this cleanup (a full LLM pass takes 3 to 6 hours per dataset on a single GPU). Requires Python 3.9+.
 
-## Running the model
+```bash
+git clone https://github.com/ahuou/SentimentAnalysis-PretrainedLLM
+cd SentimentAnalysis-PretrainedLLM
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-Finally the data_modeliser module can be run with the following command serving as example:
-`python .\data_modeliser.py --prompts_file "prompts/DS2_3_Shot_prompt.txt" --model_path "mistral-7b-instruct-v0.2.Q4_K_M.gguf" --batch_size 0 --marker 'DS2' --start 14270 --random_few_shot --classified`
+For GPU inference, install `llama-cpp-python` with CUDA enabled (see the [llama-cpp-python install docs](https://github.com/abetlen/llama-cpp-python#installation); on Windows, [issue #721](https://github.com/abetlen/llama-cpp-python/issues/721) fixed the silent `BLAS = 0` CPU fallback).
 
-Let us discuss the arguments to this function quickly: 
+**Datasets** (third-party, not redistributed here):
 
-- [`--prompts_file`](--prompts_file): This should be a text file, with a line giving the context, separated by a
-return, followed by another line which is the actual prompt. As we will see, this file structure will depend on further arguments
+- DS1 (messages): download [Text Dataset for Text Emotion Detection](https://www.kaggle.com/datasets/jarvis11/text-dataset-for-text-emotion-detection) from Kaggle and place its `text.txt` at `dataset_textEmotion/text.txt`.
+- DS2 (tweets): `git clone https://github.com/SannketNikam/Emotion-Detection-in-Text dataset_emoDetectInText/EmotionDetectInText` (the code reads `data/emotion_dataset.csv`).
 
-- [`--model_path`](--model_path): This should not be changed, the default value (mistral) is the only one that
-returns satisfying results
+**Model**: download `mistral-7b-instruct-v0.2.Q4_K_M.gguf` (for example from [TheBloke/Mistral-7B-Instruct-v0.2-GGUF](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF)) into the repo root.
 
-- [`--batch_size`](--batch_size): For llama, batch prompting isn't supported, a possible extension would be to check
-how feasible it would be with Mistral
+```bash
+python data_retriever.py           # sanity check: loads and prints both datasets
+python data_modeliser.py --prompts_file prompts/DS2_3_Shot_prompt.txt \
+  --model_path mistral-7b-instruct-v0.2.Q4_K_M.gguf --marker DS2 --random_few_shot
+python data_evaluator.py           # evaluates results/DS2_3_Shot_res.txt
+```
 
-- [`--marker`](--marker): Used to help with saving and differentiating the results
+`data_modeliser.py` arguments: `--marker DS1|DS2` picks the dataset, `--start N` resumes a crashed run from row N, `--random_few_shot` enables 3-shot prompting, `--classified` forces one example per label (not recommended: it biased the model towards "Neutral"). In `data_evaluator.py`, call `evaluator(path, "simple" | "tweet", ...)` for DS1 or DS2 respectively.
 
-- [`--start`](--start): In the case of getting some error mid-run, this parameter will run the modeliser module
-from the line "start" in the database
+## My role
 
-- [`--random_few_shot`](--random_few_shot): This enables the model to get 3 random examples of text + prediction 
-during prompting (this is known as few-shot prompting, not fine-tuning)
+Solo project by Alexandre Huou ([@ahuou](https://github.com/ahuou)): dataset preprocessing and label mapping, the prompting pipeline and GPU setup, output post-processing, the classical and RoBERTa baselines, and the report.
 
-- [`--classified`](--classified): This decides whether during few-shot prompting, we should provide 1 example 
-of each label. It is recommended to keep default values as it biases the model due to the label's non-uniform repartition
+## Credits
 
-## Evaluating the model
-
-In order to evaluate the model, one should run the data_evaluator script, one can understand with the example call:
-`evaluator("results/DS1_0_Shot_res.txt", "simple", normalized=True, mode="discrete", lowBound=0.5, highBound=0.5, majMap='Negative')`
-
-- [`--res_to_eval`](--res_to_eval): Path to the pickled result file obtained at the end of the data_modeliser module run
-
-- [`--type`](--type): This should be set to "simple" if using results for dataset1, and "tweet" if using results for dataset2
-
-- [`--normalized`](--normalized): This decides whether the heatmaps for the confusion matrices should sum to 1 or to the size of the dataset
-
-- [`--mode`](--mode): This should be set to "discrete" if we expect the model to predict a sentiment, and to continuous if the model returns a score from 0 to 1
-
-- [`--lowBound`](--lowBound): In the case of getting a score, this decides manually the mapping score->sentiment (< lowBound -> Negative)
-
-- [`--highBound`](--highBound): In the case of getting a score, this decides manually the mapping score->sentiment (> highBound -> Positive)
-
-- [`--majMap`](--majMap): In the case the model predicts an answer that can't be approximated to one of the sentiments, transforms its output to the selected sentiment majMap
-
-- [`--testPercent`](--testPercent): Allows us to measure performance on the same subset of the DS as the baselines
-
-
-## Comparing the model to the baselines
-
-In order to know how good our evaluation of the model's performance with respect to our prompt is we compare it to different types of baselines.
-These baselines can be statistical, regression-based (using simpler ML methods than LLMs). There is also an extra baseline which runs a very specific pretrained LLM (Roberta)
+- Supervisors: Prof. Petr Motlicek and Dr. Esaú Villatoro-Tello, Idiap Research Institute.
+- Datasets: [jarvis11 on Kaggle](https://www.kaggle.com/datasets/jarvis11/text-dataset-for-text-emotion-detection) (DS1) and [SannketNikam/Emotion-Detection-in-Text](https://github.com/SannketNikam/Emotion-Detection-in-Text) (DS2).
+- Report: A. Huou, P. Motlicek, E. Villatoro-Tello, *Sentiment Analysis using pretrained LLMs*, Idiap-RR-05-2024, July 2024. [PDF](https://publications.idiap.ch/attachments/reports/2024/Huou_Idiap-RR-05-2024.pdf)
